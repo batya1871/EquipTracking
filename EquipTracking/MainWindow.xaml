@@ -11,7 +11,6 @@
          WindowState="Maximized"
         AllowsTransparency="True"
         WindowStyle="None"
-        Background="#FF007ACC"
         ResizeMode="CanResizeWithGrip"
         MinHeight="540"
         MinWidth="1100"
@@ -23,6 +22,12 @@
 
 
     </Window.Resources>
+    <Window.Background>
+        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+            <GradientStop Color="#FF2D5B91" Offset="0.755"/>
+            <GradientStop Color="#FF32619A" Offset="0.223"/>
+        </LinearGradientBrush>
+    </Window.Background>
 
     <Border Name="Border" >
         <Grid x:Name="MainGrid">
@@ -44,14 +49,17 @@
                        MouseLeftButtonDown="Mouse_Drag_Window" Name="RHDP"
                       >
                     <DockPanel.Background>
-                        <SolidColorBrush Color="#FF2E2E30">
-                        </SolidColorBrush>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                            <GradientStop Color="Black"/>
+                            <GradientStop Color="#FF0E5E7C" Offset="0.591"/>
+                            <GradientStop Color="#FF144A5E" Offset="1"/>
+                        </LinearGradientBrush>
                     </DockPanel.Background>
 
                     <StackPanel
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
-                        <Label Visibility="Visible" Content="Войти..." Style="{StaticResource ButtonHead}" 
+                        <Label Visibility="Hidden"  Content="Войти..." Style="{StaticResource ButtonHead}" 
                            Name="Login_label"
                            MouseEnter="Header_Mouse_Enter"
                            MouseLeave="Header_Mouse_Leave"
@@ -106,13 +114,20 @@
 
                     </StackPanel>
                 </DockPanel>
-                <Grid Name="MachActZone" Background="#FF2E2E30"  Height="32" Width="140" Margin="5,-15,0,0"
+                <Grid Name="MachActZone"   Height="32" Width="140" Margin="5,-15,0,0"
                   Grid.Row="1"   Grid.Column="0" Grid.ColumnSpan="2"
                   VerticalAlignment="Top"
                   HorizontalAlignment="Left"
                   Panel.ZIndex="900"
                   MouseLeave="MachActZone_MouseLeave"
-                  Visibility="Hidden">
+                  Visibility="Visible">
+                    <Grid.Background>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+
+                            <GradientStop Color="#FF0E5E7C" Offset="0.591"/>
+                            <GradientStop Color="#FF144A5E" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Grid.Background>
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" Width="140" >
                         <Label  Style="{StaticResource Button}"  Name="btnEditMach" Width="140" MouseDown="btnEditMach_MouseDown" >
                             <Label.Content>
@@ -132,13 +147,19 @@
                     </StackPanel>
 
                 </Grid>
-                <Grid Name="ListActZone" Background="#FF2E2E30"  Height="65" Width="140" Margin="33,-15,0,0"
+                <Grid Name="ListActZone"  Height="65" Width="140" Margin="33,-15,0,0"
                   Grid.Row="1"   Grid.Column="1" Grid.ColumnSpan="2"
                   VerticalAlignment="Top"
                   HorizontalAlignment="Left"
                   Panel.ZIndex="900"
                   MouseLeave="ListActZone_MouseLeave"
                   Visibility="Hidden">
+                    <Grid.Background>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                            <GradientStop Color="#FF0E5E7C" Offset="0.591"/>
+                            <GradientStop Color="#FF144A5E" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Grid.Background>
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left" Width="140" >
                         <Label  Style="{StaticResource Button}"  Name="btnAddMach" MouseDown="btnAddMach_MouseDown" Width="140" >
                             <Label.Content>
@@ -183,7 +204,11 @@
                            
                        >
                     <DockPanel.Background>
-                        <SolidColorBrush Color="#FF2E2E30" ></SolidColorBrush>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                            <GradientStop Color="Black"/>
+                            <GradientStop Color="#FF0E5E7C" Offset="0.591"/>
+                            <GradientStop Color="#FF144A5E" Offset="1"/>
+                        </LinearGradientBrush>
                     </DockPanel.Background>
 
                 </DockPanel>
@@ -198,11 +223,11 @@
                         <StackPanel Orientation="Horizontal" Height="40" Margin="0,5,0,0">
                             <Label Content="Действия с техникой"  Style="{StaticResource ButtonHead}"
                            MouseEnter="Header_Mouse_Enter" MouseLeave="Header_Mouse_Leave"  MouseDown="MachActDown"
-                                   MouseUp="ButtonUp" />
+                                    />
                             <Label x:Name="NoteInfo"  Content="Действия со списком" Style="{StaticResource ButtonHead}" 
                                    MouseEnter="Header_Mouse_Enter"
                            MouseLeave="Header_Mouse_Leave" MouseDown="ListActDown"
-                           MouseUp="ButtonUp" 
+                           
                            />
                             <Label Content="Список всей техники" Style="{StaticResource ButtonHead}"
                            MouseEnter="Header_Mouse_Enter" MouseLeave="Header_Mouse_Leave"  MouseDown="AllMachInTable_MouseDown"
@@ -351,7 +376,7 @@
                     </StackPanel>
                     <TextBlock Visibility="Hidden" Text="Новые данные внесены!" FontSize="16" x:Name="ChangeNot2"/>
                 </StackPanel>
-                
+
                 <!--#endregion-->
 
 

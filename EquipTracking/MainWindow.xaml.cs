@@ -189,7 +189,6 @@ namespace EquipTracking
         {
             if (ListActZone.Visibility == Visibility.Visible) ListActZone.Visibility = Visibility.Hidden;
 
-            ((Label)sender).Background = (Brush)Application.Current.MainWindow.FindResource("ButtonBrush1");
             MachActZone.Visibility = Visibility.Visible;
 
         }
@@ -214,7 +213,6 @@ namespace EquipTracking
         {
             if (MachActZone.Visibility == Visibility.Visible) MachActZone.Visibility = Visibility.Hidden;
 
-            ((Label)sender).Background = (Brush)Application.Current.MainWindow.FindResource("ButtonBrush1");
             ListActZone.Visibility = Visibility.Visible;
 
         }

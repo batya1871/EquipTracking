@@ -5,7 +5,7 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <SolidColorBrush x:Key="ButtonBrush1" Color="#FF2A2A30"/>
-        <SolidColorBrush x:Key="ButtonBrush2" Color="#FF2E2E30"/>
+        <SolidColorBrush x:Key="ButtonBrush2" Color="#FF144A5E"/>
         <SolidColorBrush x:Key="ButtonBrush_right_side_bar_1" Color="#FF9B979E"/>
         <SolidColorBrush x:Key="ButtonBrush_right_side_bar_2" Color="#FFB9B3BF"/>
         <SolidColorBrush x:Key="ButtonBrush_right_side_bar_in" Color="#FFECECEC"/>
@@ -19,10 +19,17 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="Padding" Value="2,0,0,0"/>
-            <Setter Property="Background" Value="#FF2E2E30"/>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="#FF0E5E7C" Offset="0.591"/>
+                        <GradientStop Color="#FF144A5E" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FF474643"/>
+                    <Setter Property="Background" Value="#FF20445D"/>
                 </Trigger>
             </Style.Triggers>
 
