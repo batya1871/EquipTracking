@@ -10,10 +10,10 @@ namespace EquipTracking
         CombineHarvester
     }
     public class AgrMachinery
-
     {
         public AgrMachinery(int id, string name, string point, TypeOfArgMach type, DateTime st, DateTime et)
         {
+            WorkSpace = point;
             Id = id;
             OperatorName = name;
             PointOfDislocation = point;
@@ -36,11 +36,15 @@ namespace EquipTracking
             isWorkingNowCheck();
 
         }
-        public string OperatorName { get; set; }
-        public int Id { get; set; }
-        public string PointOfDislocation { get; set; }
-        public int HoursOfWorkTD { get; set; }
-        public int AllHoursOfWork { get; set; }
+        public string OperatorName { get; set; } //ФИО машиниста
+        public int Id { get; set; } // id техники
+
+        public string PointOfDislocation { get; set; } //Текущее местоположение
+        public String WorkSpace { get; set; } // Место, в котором должна быть техника
+
+        public int HoursOfWorkTD { get; set; } //Часы работы сегодня
+        public int AllHoursOfWork { get; set; } //Общее кол-во отработанных часов
+
         private double fuelTank;
         public double FuelTank
         {
@@ -49,22 +53,58 @@ namespace EquipTracking
                 if (value < MaxTankCapacity) fuelTank = value;
                 else fuelTank = MaxTankCapacity;
             }
+        } //Оставшееся топливо
+        public double SpentFuel { get; set; } //Потрачено топлива за все время
+        public int MaxTankCapacity { get; set; } //Вместимось топливного бака
+
+        public  TypeOfArgMach Type { get; set; } //Тип техники
+        public string TypeStr { get; set; } //Тип техники в виде строки
+
+        public DateTime StartTime { get; set; } //Время начала смены
+        public DateTime EndTime { get; set; } //Время конца смены
+        public string StartTimeStr { get; set; } //Время начала смены (строка)
+        public string EndTimeStr { get; set; }//Время конца смены (строка)
+
+        public bool IsOnTheWork { get; set; }//Флаг - техника на работе?
+        public bool IsNotOnThePoint { get; set; } = false;//Флаг - техника на месте работы?
+
+        public bool TechnicalCondition { get; set; } = true; //Флаг - техника в надлежащем состоянии?
+        public string DescriptionOfCondition { get; set; } //Описание поломки
+
+        public DateTime dateOfDebiting { get; set; } //Дата последнего события, связанного с этой техникой
+
+        public void Clone(AgrMachinery mach)
+        {
+            PointOfDislocation = mach.PointOfDislocation;
+            Id = mach.Id;
+            OperatorName = mach.OperatorName;
+            HoursOfWorkTD = mach.HoursOfWorkTD;
+            AllHoursOfWork = mach.AllHoursOfWork;
+            WorkSpace = mach.WorkSpace;
+            Type = mach.Type;
+            TypeStr = mach.TypeStr;
+            SpentFuel = mach.SpentFuel;
+            FuelTank = mach.FuelTank;
+            MaxTankCapacity = mach.MaxTankCapacity;
+            StartTime = mach.StartTime;
+            StartTimeStr = mach.StartTimeStr;
+            EndTime = mach.EndTime;
+            EndTimeStr = mach.EndTimeStr;
+            IsOnTheWork = mach.IsOnTheWork;
+            IsNotOnThePoint = mach.IsNotOnThePoint;
+            TechnicalCondition = mach.TechnicalCondition;
+            DescriptionOfCondition = mach.DescriptionOfCondition;
+            dateOfDebiting = mach.dateOfDebiting;
         }
-        public double SpentFuel { get; set; }
-        public int MaxTankCapacity { get; }
-        public  TypeOfArgMach Type { get; set; }
-        public string TypeStr { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
 
-        public string StartTimeStr { get; set; }
-        public string EndTimeStr { get; set; }
-
-        public bool IsOnTheWork { get; set; }
-
+        /// <summary>
+        /// Метод проверяет работает ли сейчас техника
+        /// и находится ли она на нужном месте
+        /// </summary>
         public void isWorkingNowCheck()
         {
-            if (FuelTank != 0)
+            
+            if ((FuelTank != 0)&&(!IsNotOnThePoint) && (TechnicalCondition))
             {
                 DateTime Now = DateTime.Now;
                 if (StartTime < EndTime)
@@ -72,6 +112,7 @@ namespace EquipTracking
                     if ((StartTime.Hour < Now.Hour) && (EndTime.Hour > Now.Hour))
                     {
                         IsOnTheWork = true;
+                        PointOfDislocation = WorkSpace;
                         return;
 
                     }
@@ -80,6 +121,7 @@ namespace EquipTracking
                         if (StartTime.Minute < Now.Minute)
                         {
                             IsOnTheWork = true;
+                            PointOfDislocation = WorkSpace;
                             return;
                         }
                     }
@@ -88,6 +130,7 @@ namespace EquipTracking
                         if (EndTime.Minute > Now.Minute) 
                         {
                             IsOnTheWork = true;
+                            PointOfDislocation = WorkSpace;
                             return;
                         }
                     }
@@ -97,12 +140,14 @@ namespace EquipTracking
                     if ((StartTime.Hour > Now.Hour) && (EndTime.Hour < Now.Hour))
                     {
                         IsOnTheWork = false;
+                        PointOfDislocation = "На стоянке";
                     }
                     else if (StartTime.Hour == Now.Hour)
                     {
                         if (StartTime.Minute < Now.Minute)
                         {
                             IsOnTheWork = true;
+                            PointOfDislocation = WorkSpace;
                             return;
                         }
                     }
@@ -111,23 +156,30 @@ namespace EquipTracking
                         if (EndTime.Minute > Now.Minute)
                         {
                             IsOnTheWork = true;
+                            PointOfDislocation = WorkSpace;
                             return;
                         }
                     }
                     else
                     {
                         IsOnTheWork = true;
+                        PointOfDislocation = WorkSpace;
                         return;
                     }
 
                 }
 
             }
+            if (IsNotOnThePoint) PointOfDislocation = "Не на точке";
+            else if  (!TechnicalCondition)  PointOfDislocation = "В СТО";
+            else PointOfDislocation = "На стоянке";
             IsOnTheWork = false;
 
 
         }
-
+        /// <summary>
+        /// Метод для конвертации объекта DataTime в строку
+        /// </summary>
         public void ConvertDataToTimeStr()
         {
             StartTimeStr = "";
@@ -142,6 +194,11 @@ namespace EquipTracking
             if (EndTime.Minute < 10) EndTimeStr += 0 + EndTime.Minute.ToString();
             else EndTimeStr += EndTime.Minute.ToString();
         }
+        /// <summary>
+        /// Метод, высчитывающий потроченное топливо
+        /// и кол-во отработанных часов за время, что программа провела
+        /// без работы
+        /// </summary>
         public void CalculationOfHoursSpentAndFuel()
         {
             if (IsOnTheWork)

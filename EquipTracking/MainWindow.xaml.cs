@@ -13,6 +13,7 @@ namespace EquipTracking
     /// </summary>
     public partial class MainWindow : Window
     {
+        Random rnd = new Random();
         private readonly string AgrMachPath = $"{Environment.CurrentDirectory}\\AgrMach.json";
         private readonly string eventsPath = $"{Environment.CurrentDirectory}\\Events.json";
         public BindingList<AgrMachinery> AllArgMachineryList;
@@ -33,7 +34,7 @@ namespace EquipTracking
             try
             {
                 AllArgMachineryList = fileIOService.LoadAllAgrMachinery();
-
+                Container.EventsList = fileIOService.LoadEventsList();
             }
             catch (Exception ex)
             {
@@ -66,8 +67,19 @@ namespace EquipTracking
             {
                 foreach (AgrMachinery machinery in AllArgMachineryList)
                 {
-                    if (machinery.IsOnTheWork)
+                    if ((machinery.IsOnTheWork)&& (!machinery.IsNotOnThePoint) && (machinery.TechnicalCondition))
                     {
+                        bool isLeaveWorkSpace = (rnd.Next(1, 21) == 1);
+                        if (isLeaveWorkSpace)
+                        {
+                            machinery.IsNotOnThePoint = true;
+                            machinery.dateOfDebiting = DateTime.Now;
+                            machinery.DescriptionOfCondition = "Машина покинула место работы!";
+                            AgrMachinery EventMach = new AgrMachinery(int.MinValue, null, null, TypeOfArgMach.Tractor, DateTime.MinValue, DateTime.MinValue);
+                            EventMach.Clone(machinery);
+                            Container.EventsList.AddFirst(EventMach);
+                            NoteInfo.Content = "Новые оповещения!";
+                        }
                         if (machinery.Type == TypeOfArgMach.CombineHarvester)
                         {
                             if (machinery.FuelTank - 0.7 < 0)
@@ -97,6 +109,16 @@ namespace EquipTracking
                         machinery.FuelTank = Math.Round(machinery.FuelTank, 3);
                         machinery.SpentFuel = Math.Round(machinery.SpentFuel, 3);
 
+                        if (machinery.FuelTank == 0)
+                        {
+                            machinery.dateOfDebiting = DateTime.Now;
+                            machinery.DescriptionOfCondition = "Закончилось топливо";
+                            AgrMachinery EventMach = new AgrMachinery(int.MinValue, null, null, TypeOfArgMach.Tractor, DateTime.MinValue, DateTime.MinValue);
+                            EventMach.Clone(machinery);
+                            Container.EventsList.AddFirst(EventMach);
+                            NoteInfo.Content = "Новые оповещения!";
+                        }
+
                     }
                     CheckActiveMachine(AllArgMachineryList);
                     CheckMachineWithoutGasoline(AllArgMachineryList);
@@ -114,7 +136,7 @@ namespace EquipTracking
             {
                 foreach (AgrMachinery machinery in AllArgMachineryList)
                 {
-                    if (machinery.IsOnTheWork)
+                    if ((machinery.IsOnTheWork) && (!machinery.IsNotOnThePoint) && (machinery.TechnicalCondition))
                     {
                         machinery.HoursOfWorkTD += 1;
                         machinery.AllHoursOfWork += 1;
@@ -175,7 +197,242 @@ namespace EquipTracking
         }
 
 
+        #region Find Machine
 
+        private void FindMach_Click(object sender, RoutedEventArgs e)
+        {
+            HiddenAllPanels();
+            FindMachPanel.Visibility = Visibility.Visible;
+            FindMachNotificationTb.Visibility = Visibility.Hidden;
+            FindMach_Warning.Visibility = Visibility.Hidden;
+        }
+        private void FindMachBtn_click(object sender, RoutedEventArgs e)
+        {
+            FindMachNotificationTb.Visibility = Visibility.Hidden;
+            FindMach_Warning.Visibility = Visibility.Hidden;
+            if (FindHiddenMachIdTxb.Text != "")
+            {
+                bool isFounded = false;
+                int machId = int.Parse(FindHiddenMachIdTxb.Text);
+                foreach (AgrMachinery machinery in AllArgMachineryList)
+                {
+                    if ((machinery.Id == machId))
+                    {
+                        if (machinery.IsNotOnThePoint == false)
+                        {
+                            FindMachNotificationTb.Text = "Техника находится на месте работы!";
+                            FindMachNotificationTb.Visibility = Visibility.Visible;
+                            return;
+                        }
+                        isFounded = true;
+                        machinery.IsNotOnThePoint = false;
+                        machinery.DescriptionOfCondition = "Техника возвращена";
+                        machinery.dateOfDebiting = DateTime.Now;
+                        AgrMachinery EventMach = new AgrMachinery(int.MinValue, null, null, TypeOfArgMach.Tractor, DateTime.MinValue, DateTime.MinValue);
+                        EventMach.Clone(machinery);
+                        Container.EventsList.AddFirst(EventMach);
+                        NoteInfo.Content = "Новые оповещения!";
+                        machinery.DescriptionOfCondition = "Эксплуатируется";
+                        machinery.dateOfDebiting = DateTime.MinValue;
+                        FindMachNotificationTb.Text = "Техника возвращена!";
+                        break;
+                    }
+                }
+                if (!isFounded)
+                {
+                    FindMachNotificationTb.Text = " id отсутствует в системе!";
+                }
+                ClearAllTbx();
+                FindMachNotificationTb.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                FindMach_Warning.Visibility = Visibility.Visible;
+            }
+
+        }
+        #endregion
+        #region Write Off Machine
+        private void Mach_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (breakDownPanel.Visibility == Visibility.Visible)
+            {
+                breakDownPanel.Visibility = Visibility.Hidden;
+                breakdownDescPanel.Visibility = Visibility.Hidden;
+                isBrokenMachChB.IsChecked = false;
+                breakDownDescTxb.Clear();
+            }
+        }
+        private void Mach_PreviewTextInputDesc(object sender, TextCompositionEventArgs e)
+        {
+            if (breakDownPanel.Visibility == Visibility.Visible)
+            {
+                breakDownPanel.Visibility = Visibility.Hidden;
+                breakdownDescPanel.Visibility = Visibility.Hidden;
+                isBrokenMachChB.IsChecked = false;
+                breakDownDescTxb.Clear();
+            }
+            if (!(Char.IsDigit(e.Text, 0) || (e.Text == ",")))
+            {
+                e.Handled = true;
+            }
+        }
+        private void isBrokenMachChB_Click(object sender, RoutedEventArgs e)
+        {
+            if (isBrokenMachChB.IsChecked == true)
+            {
+                breakdownDescPanel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                breakDownDescTxb.Clear();
+                breakdownDescPanel.Visibility = Visibility.Hidden;
+            }
+        }
+
+        private void WOMach_Click(object sender, RoutedEventArgs e)
+        {
+            HiddenAllPanels();
+            WOMachIdTxb.Clear();
+            isBrokenMachChB.IsChecked = false;
+            writeOffMachPanel.Visibility = Visibility.Visible;
+            WOMachNotificationTb1.Visibility = Visibility.Hidden;
+            WOMachNotificationTb2.Visibility = Visibility.Hidden;
+            BOMach_Warning.Visibility = Visibility.Hidden;
+            WOMach_Warning.Visibility = Visibility.Hidden;
+
+        }
+        private void WOMachBtn_click(object sender, RoutedEventArgs e)
+        {
+            WOMachNotificationTb1.Visibility = Visibility.Hidden;
+            WOMach_Warning.Visibility = Visibility.Hidden;
+            if (WOMachIdTxb.Text != "")
+            {
+                bool alreadyWO = false;
+                bool isInRoute = false;
+                bool isFounded = false;
+                int SearchedId = int.Parse(WOMachIdTxb.Text);
+                foreach (AgrMachinery machinery in AllArgMachineryList)
+                {
+                    if ((machinery.Id == SearchedId))
+                    {
+                        isFounded = true;
+                        if (!machinery.TechnicalCondition)
+                        {
+                            alreadyWO = true;
+                            WOMachNotificationTb1.Text = "Техника уже списана!";
+                            WOMachNotificationTb1.Visibility = Visibility.Visible;
+                        }
+                        break;
+                    }
+                }
+                if (isFounded)
+                {
+                    if ((!isInRoute) && (!alreadyWO))
+                    {
+
+                        breakDownPanel.Visibility = Visibility.Visible;
+                        infoTb.Text = "id - " + SearchedId;
+                    }
+                }
+                else
+                {
+                    WOMachNotificationTb1.Text = "Техника с данным id отсутствует в системе!";
+
+                    WOMachNotificationTb1.Visibility = Visibility.Visible;
+                    ClearAllTbx();
+                }
+
+
+            }
+            else
+            {
+                WOMach_Warning.Visibility = Visibility.Visible;
+            }
+
+        }
+        private void breakdownDescBtn_Click(object sender, RoutedEventArgs e)
+        {
+            WOMachNotificationTb1.Visibility = Visibility.Hidden;
+            BOMach_Warning.Visibility = Visibility.Hidden;
+            int SearchedId = int.Parse(WOMachIdTxb.Text);
+            if (breakDownDescTxb.Text != "")
+            {
+                string Desc = breakDownDescTxb.Text;
+                foreach (AgrMachinery machinery in AllArgMachineryList)
+                {
+                    if (machinery.Id == SearchedId)
+                    {
+                        machinery.TechnicalCondition = false;
+                        machinery.dateOfDebiting = DateTime.Now;
+                        machinery.DescriptionOfCondition = "Cписана с эксплуатации. " + Desc;
+                        AgrMachinery EventMach = new AgrMachinery(int.MinValue, null,null,TypeOfArgMach.Tractor, DateTime.MinValue, DateTime.MinValue);
+                        EventMach.Clone(machinery);
+                        Container.EventsList.AddFirst(EventMach);
+                        NoteInfo.Content = "Новые оповещения!";
+                        WOMachNotificationTb2.Visibility = Visibility.Visible;
+                        breakDownDescTxb.Clear();
+                    }
+                }
+            }
+            else
+            {
+                WOMachNotificationTb2.Visibility = Visibility.Hidden;
+                BOMach_Warning.Visibility = Visibility.Visible;
+            }
+        }
+        #endregion
+        #region Write On Machine
+
+        private void writeOnMach_Click(object sender, RoutedEventArgs e)
+        {
+            HiddenAllPanels();
+            breakDownPanel.Visibility = Visibility.Hidden;
+            breakdownDescPanel.Visibility = Visibility.Hidden;
+            writeOnMachPanel.Visibility = Visibility.Visible;
+        }
+
+        private void WOnMachBtn_click(object sender, RoutedEventArgs e)
+        {
+            WOnMachNotificationTb.Visibility = Visibility.Hidden;
+            WOnMach_Warning.Visibility = Visibility.Hidden;
+            if (WOnMachIdTxb.Text != "")
+            {
+                bool isFounded = false;
+                int machId = int.Parse(WOnMachIdTxb.Text);
+                foreach (AgrMachinery machinery in AllArgMachineryList)
+                {
+                    if ((machinery.Id == machId))
+                    {
+                        isFounded = true;
+                        machinery.TechnicalCondition = true;
+                        machinery.DescriptionOfCondition = "Техника введена в эскплуатацию.";
+                        machinery.dateOfDebiting = DateTime.Now;
+                        AgrMachinery EventMach = new AgrMachinery(int.MinValue, null, null, TypeOfArgMach.Tractor, DateTime.MinValue, DateTime.MinValue);
+                        EventMach.Clone(machinery);
+                        Container.EventsList.AddFirst(EventMach);
+                        NoteInfo.Content = "Новые оповещения!";
+                        machinery.DescriptionOfCondition = "Эксплуатируется";
+                        machinery.dateOfDebiting = DateTime.MinValue;
+                        WOnMachNotificationTb.Text = "Техника восстановлена!";
+                        break;
+                    }
+                }
+                if (!isFounded)
+                {
+                    WOnMachNotificationTb.Text = " id отсутствует в системе!";
+                }
+                ClearAllTbx();
+                WOnMachNotificationTb.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                WOnMach_Warning.Visibility = Visibility.Visible;
+            }
+
+        }
+
+        #endregion
         #region basic actions with the window
         private void Header_Leave(object sender, MouseEventArgs e)
         {
@@ -246,6 +503,7 @@ namespace EquipTracking
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             fileIOService.SaveAllAgrMachinery(AllArgMachineryList);
+            fileIOService.SaveEventsList(Container.EventsList);
             FuelTimer.Stop();
             e.Cancel = true; // Отмена закрытия окна 
         }
@@ -406,6 +664,10 @@ namespace EquipTracking
 
             TopUpId.Clear();
 
+            WOnMachIdTxb.Clear();
+            breakDownDescTxb.Clear();
+            WOMachIdTxb.Clear();
+
         }
 
         private void DelMachBtn_Click(object sender, RoutedEventArgs e)
@@ -441,6 +703,7 @@ namespace EquipTracking
         
         private void FindIdBtn_Click(object sender, RoutedEventArgs e)
         {
+            ChangeNot2.Visibility = Visibility.Hidden;
             ChangeNot1.Visibility = Visibility.Hidden;
             if (ChangeId.Text == "")
             {
@@ -482,6 +745,7 @@ namespace EquipTracking
 
         private void ChangeMachBtn_Click(object sender, RoutedEventArgs e)
         {
+            ChangeNot1.Visibility = Visibility.Hidden;
             if ( (ChangeName.Text == "") || (ChangePoint.Text == "") || (ChangeStartTimeTB.Text == "") || (ChangeEndTimeTB.Text == ""))
             {
                 ChangeNot2.Text = "Введены не все данные!";
@@ -500,6 +764,7 @@ namespace EquipTracking
                     {
                         machinery.OperatorName = name;
                         machinery.PointOfDislocation = point;
+                        machinery.WorkSpace = point;
                         machinery.StartTime = st;
                         machinery.EndTime = et;
 
@@ -523,12 +788,11 @@ namespace EquipTracking
 
         private void btnWorkingMach_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            HiddenAllPanels();
             UserInActiveTable = true;
             ClearAllTbx();
             CheckActiveMachine(AllArgMachineryList);
-
-            AddMachZone.Visibility = Visibility.Hidden;
-            AllMachTable.Visibility = Visibility.Hidden;
+            MainTable.ItemsSource = null;
             MainTable.ItemsSource = AgrMachineryOnTheWorkList;
             MainTable.Visibility = Visibility.Visible;
             TableTitlelbl.Content = "Техника на вывозе";
@@ -536,75 +800,27 @@ namespace EquipTracking
             TableTitlelbl.Margin = new Thickness(5, -9, 0, 0);
             TableTitlelbl.Visibility = Visibility.Visible;
 
-            DeleteMachZone.Visibility = Visibility.Hidden;
-
-            ChangeMachZone.Visibility = Visibility.Hidden;
-            ChangeMachZone2.Visibility = Visibility.Hidden;
-            ChangeNot1.Visibility = Visibility.Hidden;
-            ChangeNot2.Visibility = Visibility.Hidden;
-
-            TopUpTanksZone.Visibility = Visibility.Hidden;
-            TopUpOneTankNot.Visibility = Visibility.Hidden;
-            TopUpTanksNot.Visibility = Visibility.Hidden;
         }
 
         private void btnAddMach_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            ClearAllTbx();
+            HiddenAllPanels();
             AddMachZone.Visibility = Visibility.Visible;
-            MainTable.Visibility = Visibility.Hidden;
-            AllMachTable.Visibility = Visibility.Hidden;
-            TableTitlelbl.Visibility = Visibility.Hidden;
             AddNot.Visibility = Visibility.Hidden;
-            DeleteMachZone.Visibility = Visibility.Hidden;
-
-            ChangeMachZone.Visibility = Visibility.Hidden;
-            ChangeMachZone2.Visibility = Visibility.Hidden;
-            ChangeNot1.Visibility = Visibility.Hidden;
-            ChangeNot2.Visibility = Visibility.Hidden;
-
-            TopUpTanksZone.Visibility = Visibility.Hidden;
-            TopUpOneTankNot.Visibility = Visibility.Hidden;
-            TopUpTanksNot.Visibility = Visibility.Hidden;
         }
 
         private void btnDeleteMach_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            ClearAllTbx();
-            AddMachZone.Visibility = Visibility.Hidden;
+            HiddenAllPanels();
             DeleteMachZone.Visibility = Visibility.Visible;
             DelNot.Visibility = Visibility.Hidden;
-            MainTable.Visibility = Visibility.Hidden;
-            AllMachTable.Visibility = Visibility.Hidden;
-            TableTitlelbl.Visibility = Visibility.Hidden;
-
-            ChangeMachZone.Visibility = Visibility.Hidden;
-            ChangeMachZone2.Visibility = Visibility.Hidden;
-            ChangeNot1.Visibility = Visibility.Hidden;
-            ChangeNot2.Visibility = Visibility.Hidden;
-
-            TopUpTanksZone.Visibility = Visibility.Hidden;
-            TopUpOneTankNot.Visibility = Visibility.Hidden;
-            TopUpTanksNot.Visibility = Visibility.Hidden;
         }
 
         private void btnEditMach_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            ClearAllTbx();
-            AddMachZone.Visibility = Visibility.Hidden;
-            MainTable.Visibility = Visibility.Hidden;
-            AllMachTable.Visibility = Visibility.Hidden;
-            TableTitlelbl.Visibility = Visibility.Hidden;
-            DeleteMachZone.Visibility = Visibility.Hidden;
+            HiddenAllPanels();
 
             ChangeMachZone.Visibility = Visibility.Visible;
-            ChangeMachZone2.Visibility = Visibility.Hidden;
-            ChangeNot1.Visibility = Visibility.Hidden;
-            ChangeNot2.Visibility = Visibility.Hidden;
-
-            TopUpTanksZone.Visibility = Visibility.Hidden;
-            TopUpOneTankNot.Visibility = Visibility.Hidden;
-            TopUpTanksNot.Visibility = Visibility.Hidden;
         }
 
         private void   TopUpChB_Click(object sender, RoutedEventArgs e)
@@ -719,50 +935,29 @@ namespace EquipTracking
 
         private void btnRefill_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            ClearAllTbx();
-            AddMachZone.Visibility = Visibility.Hidden;
-            MainTable.Visibility = Visibility.Hidden;
-            AllMachTable.Visibility = Visibility.Hidden;
-            TableTitlelbl.Visibility = Visibility.Hidden;
-            DeleteMachZone.Visibility = Visibility.Hidden;
-
-            ChangeMachZone.Visibility = Visibility.Hidden;
-            ChangeMachZone2.Visibility = Visibility.Hidden;
-            ChangeNot1.Visibility = Visibility.Hidden;
-            ChangeNot2.Visibility = Visibility.Hidden;
-
+            HiddenAllPanels();
             TopUpTanksZone.Visibility = Visibility.Visible;
-            TopUpOneTankNot.Visibility = Visibility.Hidden;
-            TopUpTanksNot.Visibility = Visibility.Hidden;
+
         }
 
         private void btnMachWithoutGasoline_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            HiddenAllPanels();
             UserInActiveTable = false;
             CheckMachineWithoutGasoline(AllArgMachineryList);
             MainTable.ItemsSource = MachWithoutGasolineList;
             MainTable.Visibility = Visibility.Visible;
-            AllMachTable.Visibility = Visibility.Hidden;
             TableTitlelbl.Content = "Техника без бензина";
             TableTitlelbl.FontSize = 18;
             TableTitlelbl.Margin = new Thickness(5, -9, 0, 0);
             TableTitlelbl.Visibility = Visibility.Visible;
-
-            AddMachZone.Visibility = Visibility.Hidden;
-
-            DeleteMachZone.Visibility = Visibility.Hidden;
-
-            ChangeMachZone.Visibility = Visibility.Hidden;
-            ChangeMachZone2.Visibility = Visibility.Hidden;
-            ChangeNot1.Visibility = Visibility.Hidden;
-            ChangeNot2.Visibility = Visibility.Hidden;
-
-            TopUpTanksZone.Visibility = Visibility.Hidden;
-            TopUpOneTankNot.Visibility = Visibility.Hidden;
         }
 
         private void AllMachInTable_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            CheckMachineWithoutGasoline(AllArgMachineryList);
+            CheckActiveMachine(AllArgMachineryList);
+            HiddenAllPanels();
             AllMachTable.ItemsSource = null;
             AllMachTable.ItemsSource = AllArgMachineryList;
             AllMachTable.Visibility = Visibility.Visible;
@@ -770,18 +965,56 @@ namespace EquipTracking
             TableTitlelbl.FontSize = 18;
             TableTitlelbl.Margin = new Thickness(5, -9, 0, 0);
             TableTitlelbl.Visibility = Visibility.Visible;
+        }
+        private void Mach_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!(Char.IsDigit(e.Text, 0) || (e.Text == ",")))
+            {
+                e.Handled = true;
+            }
+        }
 
-            AddMachZone.Visibility = Visibility.Hidden;
+        private void TOActiveTableBtn_Click(object sender, RoutedEventArgs e)
+        {
+            btnWorkingMach_MouseDown(null, null);
+        }
 
+        private void HiddenAllPanels()
+        {
+            ClearAllTbx();
+            breakDownPanel.Visibility = Visibility.Hidden;
+            breakdownDescPanel.Visibility = Visibility.Hidden;
+            WOnMachNotificationTb.Visibility = Visibility.Hidden;
+            MainTable.Visibility = Visibility.Hidden;
+            AllMachTable.Visibility = Visibility.Hidden;
+            TableTitlelbl.Visibility = Visibility.Hidden;
+            AddNot.Visibility = Visibility.Hidden;
             DeleteMachZone.Visibility = Visibility.Hidden;
-
             ChangeMachZone.Visibility = Visibility.Hidden;
             ChangeMachZone2.Visibility = Visibility.Hidden;
             ChangeNot1.Visibility = Visibility.Hidden;
             ChangeNot2.Visibility = Visibility.Hidden;
-
             TopUpTanksZone.Visibility = Visibility.Hidden;
             TopUpOneTankNot.Visibility = Visibility.Hidden;
+            TopUpTanksNot.Visibility = Visibility.Hidden;
+            writeOffMachPanel.Visibility = Visibility.Hidden;
+            writeOnMachPanel.Visibility = Visibility.Hidden;
+            AddMachZone.Visibility = Visibility.Hidden;
+            FindMachPanel.Visibility = Visibility.Hidden;
+        }
+
+        private void NotInfo_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Notifications w = new Notifications();
+            this.Visibility = Visibility.Hidden;
+            w.ShowDialog();
+            NoteInfo.Content = "Оповещения";
+            if(Container.EndFlag) Application.Current.Shutdown();
+            this.Visibility = Visibility.Visible;
+            
         }
     }
+
+
+
 }

@@ -114,13 +114,13 @@
 
                     </StackPanel>
                 </DockPanel>
-                <Grid Name="MachActZone"   Height="32" Width="140" Margin="5,-15,0,0"
+                <Grid Name="MachActZone"   Height="80" Width="140" Margin="5,-15,0,0"
                   Grid.Row="1"   Grid.Column="0" Grid.ColumnSpan="2"
                   VerticalAlignment="Top"
                   HorizontalAlignment="Left"
                   Panel.ZIndex="900"
                   MouseLeave="MachActZone_MouseLeave"
-                  Visibility="Visible">
+                  Visibility="Hidden">
                     <Grid.Background>
                         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
 
@@ -128,7 +128,7 @@
                             <GradientStop Color="#FF144A5E" Offset="1"/>
                         </LinearGradientBrush>
                     </Grid.Background>
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" Width="140" >
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left" Width="142" >
                         <Label  Style="{StaticResource Button}"  Name="btnEditMach" Width="140" MouseDown="btnEditMach_MouseDown" >
                             <Label.Content>
                                 <StackPanel Orientation="Horizontal">
@@ -140,6 +140,27 @@
                             <Label.Content>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Заправка техники"/>
+                                </StackPanel>
+                            </Label.Content>
+                        </Label>
+                        <Label  Style="{StaticResource Button}" Name="btnWriteOffMach" MouseDown="WOMach_Click"  Width="140">
+                            <Label.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Списать технику"/>
+                                </StackPanel>
+                            </Label.Content>
+                        </Label>
+                        <Label  Style="{StaticResource Button}" Name="btnWriteOnMach" MouseDown="writeOnMach_Click"  Width="140">
+                            <Label.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Восстановить технику"/>
+                                </StackPanel>
+                            </Label.Content>
+                        </Label>
+                        <Label  Style="{StaticResource Button}" Name="btnFindMach" MouseDown="FindMach_Click"  Width="140">
+                            <Label.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Найти технику"/>
                                 </StackPanel>
                             </Label.Content>
                         </Label>
@@ -217,22 +238,25 @@
                 <!--#region menu_bar-->
 
                 <DockPanel Grid.Column="0" Grid.ColumnSpan="2"
-                       Grid.Row="0" HorizontalAlignment="Left" Width="454" Margin="0,2"
+                       Grid.Row="0" HorizontalAlignment="Left" Width="560" Margin="0,2"
                        >
                     <StackPanel Visibility="Visible" Orientation="Vertical" MouseLeave="Header_Leave"  x:Name="OtherTablePanel">
                         <StackPanel Orientation="Horizontal" Height="40" Margin="0,5,0,0">
                             <Label Content="Действия с техникой"  Style="{StaticResource ButtonHead}"
                            MouseEnter="Header_Mouse_Enter" MouseLeave="Header_Mouse_Leave"  MouseDown="MachActDown"
                                     />
-                            <Label x:Name="NoteInfo"  Content="Действия со списком" Style="{StaticResource ButtonHead}" 
+                            <Label x:Name="ListEventsBtn"  Content="Действия со списком" Style="{StaticResource ButtonHead}" 
                                    MouseEnter="Header_Mouse_Enter"
                            MouseLeave="Header_Mouse_Leave" MouseDown="ListActDown"
                            
                            />
                             <Label Content="Список всей техники" Style="{StaticResource ButtonHead}"
                            MouseEnter="Header_Mouse_Enter" MouseLeave="Header_Mouse_Leave"  MouseDown="AllMachInTable_MouseDown"
-                                   
                            />
+                            <Label Content="Уведомления" Style="{StaticResource ButtonHead}"
+                           MouseEnter="Header_Mouse_Enter" MouseLeave="Header_Mouse_Leave" Name="NoteInfo"  MouseDown="NotInfo_MouseDown" 
+                           />
+                        
 
 
 
@@ -241,7 +265,7 @@
                 </DockPanel>
                 <!--#endregion-->
                 <!--#region main_field-->
-                <Label  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"  Visibility="Visible" x:Name="TableTitlelbl" Background="White" >
+                <Label  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"  Visibility="Hidden" x:Name="TableTitlelbl" Background="White" >
                     <Label.Content>
                         <TextBlock Text="Техника на вывозе" FontSize="18" Margin="5,-9,0,0"/>
                     </Label.Content>
@@ -269,6 +293,74 @@
                         <DataGridTextColumn IsReadOnly="True"  Binding="{Binding Path = EndTimeStr }" Header="Время конца работы" Width="180"/>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <StackPanel Orientation="Horizontal" Visibility="Hidden" x:Name="writeOffMachPanel" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock FontSize="18"  Margin ="5,5,0,0" Text="Введите id списываемой техники:"/>
+                        <StackPanel  Orientation="Horizontal">
+                            <TextBlock FontSize="16" Margin="10" Text="Id техники:"/>
+                            <TextBox  Margin="0,10,0,10" PreviewTextInput="Mach_PreviewTextInputDesc" x:Name="WOMachIdTxb" MaxWidth="130" MinWidth="100" TextChanged="Mach_TextChanged" />
+                        </StackPanel>
+                        <Button HorizontalAlignment="Left" Style="{StaticResource Button_task}" Height="20" Margin="5,0,0,0"  Width="190"  Name="WOMachBtn" Click="WOMachBtn_click">
+                            <TextBlock Padding="65,0,0,0" Text="Поиск" />
+                        </Button>
+                        <Button HorizontalAlignment="Left" Style="{StaticResource Button_task}" Height="20" Margin="5,5,0,0" Width="190"  Name="BTBFroWOMachBtn" Click="TOActiveTableBtn_Click" >
+                            <TextBlock  Padding="30,0,0,0" Text="Обратно к таблице" />
+                        </Button>
+                        <TextBlock FontSize="16" FontWeight="Bold" Visibility="Hidden" x:Name="WOMachNotificationTb1"  Margin ="5,5,0,0" Text="Техника списана!"/>
+                        <TextBlock x:Name="WOMach_Warning" Foreground="Red" Visibility="Hidden" FontSize="13" Margin="5,-20,0,0" Text="Введите id!"/>
+
+                    </StackPanel>
+
+                </StackPanel>
+                <StackPanel Margin="300,0,0,0" HorizontalAlignment="Center" Orientation="Vertical" Visibility="Hidden" Name="breakDownPanel" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                    <TextBlock  FontSize="18"  Margin ="5,5,0,0" Text="Протокол списывания:"/>
+                    <TextBlock  FontSize="18"  Margin ="5,5,0,0" Name="infoTb" Text="id - "/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock FontSize="14" Text="Обнаружена поломка" Margin="5,0,5,0"/>
+                        <CheckBox Style="{StaticResource CheckBox}"  Margin="0,3,5,0"  Name="isBrokenMachChB" Click="isBrokenMachChB_Click"  />
+                    </StackPanel>
+                    <StackPanel x:Name="breakdownDescPanel" Visibility="Hidden" Orientation="Vertical">
+                        <TextBlock FontSize="14" Text="Описание поломки:" Margin="5,10,5,0"/>
+                        <TextBox x:Name="breakDownDescTxb"  Margin="5,5,0,0" MaxHeight="100" FontSize="14" Height="100" Width="300" AcceptsReturn="True" 
+                            VerticalScrollBarVisibility="Auto"/>
+                        <Button HorizontalAlignment="Left" Style="{StaticResource Button_task}" Height="20" Margin="5,5,0,0" Width="190"   Name="breakdownDescBtn" Click="breakdownDescBtn_Click"  >
+                            <TextBlock  Padding="50,0,0,0" Text="Внести данные" />
+                        </Button>
+                        <TextBlock x:Name="BOMach_Warning" Foreground="Red" Visibility="Hidden" FontSize="13" Margin="5,0,0,0" Text="Введите описание поломки!"/>
+                        <TextBlock FontSize="16" FontWeight="Bold" Visibility="Hidden" x:Name="WOMachNotificationTb2"  Margin ="5,-15,0,0" Text="Техника списана!"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" Visibility="Hidden" x:Name="writeOnMachPanel" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                    <TextBlock FontSize="18"  Margin ="5,5,0,0" Text="Введите id восстанавливаемой техники:"/>
+                    <StackPanel  Orientation="Horizontal">
+                        <TextBlock FontSize="16" Margin="10" Text="Id техники:"/>
+                        <TextBox  Margin="0,10,0,10" PreviewTextInput="Mach_PreviewTextInput" x:Name="WOnMachIdTxb" MaxWidth="130" MinWidth="100" />
+                    </StackPanel>
+                    <Button HorizontalAlignment="Left" Style="{StaticResource Button_task}" Height="20" Margin="5,0,0,0"  Width="190"  Name="WOnMachBtn" Click="WOnMachBtn_click">
+                        <TextBlock Padding="28,0,0,0" Text="Восстановить технику" />
+                    </Button>
+                    <Button HorizontalAlignment="Left" Style="{StaticResource Button_task}" Height="20" Margin="5,5,0,0" Width="190"  Name="BTBFroWOnMachBtn" Click="TOActiveTableBtn_Click" >
+                        <TextBlock  Padding="30,0,0,0" Text="Обратно к таблице" />
+                    </Button>
+                    <TextBlock FontSize="16" FontWeight="Bold" Visibility="Hidden" x:Name="WOnMachNotificationTb"  Margin ="5,5,0,0" Text="Поезд восстановлен!"/>
+                    <TextBlock x:Name="WOnMach_Warning" Foreground="Red" Visibility="Hidden" FontSize="13" Margin="5,-20,0,0" Text="Введите id!"/>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" Visibility="Hidden" x:Name="FindMachPanel" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                    <TextBlock FontSize="18"  Margin ="5,5,0,0" Text="Введите id техники, которую требуется вернуть:"/>
+                    <StackPanel  Orientation="Horizontal">
+                        <TextBlock FontSize="16" Margin="10" Text="Id техники:"/>
+                        <TextBox  Margin="0,10,0,10" PreviewTextInput="Mach_PreviewTextInput" x:Name="FindHiddenMachIdTxb" MaxWidth="130" MinWidth="100" />
+                    </StackPanel>
+                    <Button HorizontalAlignment="Left" Style="{StaticResource Button_task}" Height="20" Margin="5,0,0,0"  Width="190"  Name="FindHiddenMachBtn" Click="FindMachBtn_click">
+                        <TextBlock Padding="38,0,0,0" Text="Вернуть технику" />
+                    </Button>
+                    <Button HorizontalAlignment="Left" Style="{StaticResource Button_task}" Height="20" Margin="5,5,0,0" Width="190"  Name="BTBFroWFindMachBtn" Click="TOActiveTableBtn_Click" >
+                        <TextBlock  Padding="30,0,0,0" Text="Обратно к таблице" />
+                    </Button>
+                    <TextBlock FontSize="16" FontWeight="Bold" Visibility="Hidden" x:Name="FindMachNotificationTb"  Margin ="5,5,0,0" Text="Техника возвращена!"/>
+                    <TextBlock x:Name="FindMach_Warning" Foreground="Red" Visibility="Hidden" FontSize="13" Margin="5,-20,0,0" Text="Введите id!"/>
+                </StackPanel>
 
                 <StackPanel Visibility="Hidden" x:Name="DeleteMachZone" Margin="10,0,0,0" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Vertical">
                     <TextBlock Margin="0,10,0,5" FontSize="18" Text="Введите id удаляемой техники:" />
